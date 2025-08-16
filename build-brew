@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Configurações
+MODULE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly MODULE_PATH
+readonly VERSION="0.0.1"
+readonly TAR_FILE="requirements-module-v${VERSION}.tar.gz"
+readonly FORMULA_FILE="envspec.rb"
+
+pushd "$MODULE_PATH" >/dev/null
+
+# 0. Impede/apaga qualquer cache relacionado
+export HOMEBREW_NO_INSTALL_FROM_API=1 HOMEBREW_NO_AUTO_UPDATE=1
+rm -f "$TAR_FILE"
+
+# 1. Cria tar.gz do módulo
+echo "Criando tarball $TAR_FILE..."
+tar -zcvf "$TAR_FILE" requirements README.md LICENSE examples/
+
+# 2. Calcula o sha256
+echo "Calculando sha256 do $TAR_FILE..."
+SHA256=$(shasum -a 256 "$TAR_FILE" | awk '{print $1}')
+echo "SHA256: $SHA256"
+
+# 3. Atualiza fórmula envspec.rb com nova versão e sha256
+echo "Atualizando fórmula $FORMULA_FILE..."
+sed -i.bak -E "s|(url \").*(\".*)|\1file://$MODULE_PATH/$TAR_FILE\2|" "$FORMULA_FILE"
+sed -i.bak -E "s|(sha256 \").*(\")|\1$SHA256\2|" "$FORMULA_FILE"
+
+# Remove arquivo de backup se quiser
+rm -f "${FORMULA_FILE}.bak"
+
+echo "Arquivo $FORMULA_FILE atualizado."
+
+# Remove cache antigo do Homebrew para forçar novo download
+CACHE_FILE=$(find ~/Library/Caches/Homebrew/downloads -maxdepth 1 -type f -name "*--$TAR_FILE" | head -n 1 || true)
+readonly CACHE_FILE
+if [[ -f "$CACHE_FILE" ]]; then
+	echo "Removendo cache antigo do Homebrew: $CACHE_FILE"
+	rm -f "$CACHE_FILE"
+fi
+
+# 4. Reinstala o envspec pelo brew
+echo "Reinstalando envspec..."
+brew reinstall --build-from-source "$FORMULA_FILE" --verbose
+
+echo "Build e instalação concluídos!"
+
+# Remove o arquivo tar.gz
+rm -f "$TAR_FILE"
+
+popd >/dev/null

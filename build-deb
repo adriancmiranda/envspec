@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Configurações
+PACKAGE_NAME="envspec"
+VERSION="0.0.1"
+ARCHITECTURE="all" # ou "amd64" se tiver binário compilado
+MAINTAINER="Adrian Miranda <adriancmiranda@gmail.com>"
+DESCRIPTION="Modular CLI for setting up development environments"
+
+# Cria diretório temporário de build e configura limpeza automática
+BUILD_DIR=$(mktemp -d -t "${PACKAGE_NAME}-${VERSION}.XXXXXXXX")
+trap 'rm -rf "$BUILD_DIR"' EXIT
+DEBIAN_DIR="$BUILD_DIR/DEBIAN"
+INSTALL_PREFIX="$BUILD_DIR/usr/local"
+BIN_DIR="$INSTALL_PREFIX/bin"
+SHARE_DIR="$INSTALL_PREFIX/share/$PACKAGE_NAME"
+
+# Cria estrutura de diretórios
+mkdir -p "$DEBIAN_DIR" "$BIN_DIR" "$SHARE_DIR"
+
+# Copia arquivos
+cp requirements "$BIN_DIR/envspec"
+chmod +x "$BIN_DIR/envspec"
+cp -r examples README.md LICENSE "$SHARE_DIR/"
+
+# Cria o arquivo de controle
+cat >"$DEBIAN_DIR/control" <<EOF
+Package: $PACKAGE_NAME
+Version: $VERSION
+Section: utils
+Priority: optional
+Architecture: $ARCHITECTURE
+Maintainer: $MAINTAINER
+Description: $DESCRIPTION
+EOF
+
+# Gera o pacote .deb
+DEB_FILE="${PACKAGE_NAME}_${VERSION}_${ARCHITECTURE}.deb"
+dpkg-deb --build "$BUILD_DIR" "$DEB_FILE"
+
+echo "Pacote .deb gerado: $DEB_FILE"

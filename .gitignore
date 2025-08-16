@@ -1,0 +1,65 @@
+# ───────────────────────────────────────────────
+# Arquivos temporários e de sistema
+# ───────────────────────────────────────────────
+*.log
+*.tmp
+*.swp
+*.bak
+*.orig
+*.rej
+.DS_Store
+
+# ───────────────────────────────────────────────
+# Arquivos de editor/IDE
+# ───────────────────────────────────────────────
+.vscode/
+.idea/
+*.code-workspace
+
+# ───────────────────────────────────────────────
+# Arquivos de controle de versão
+# ───────────────────────────────────────────────
+*.patch
+*.diff
+
+# ───────────────────────────────────────────────
+# Arquivos pessoais / históricos de shell
+# ───────────────────────────────────────────────
+*.history
+*.bash_history
+*.zsh_history
+
+# ───────────────────────────────────────────────
+# Arquivos relacionados ao Homebrew
+# ───────────────────────────────────────────────
+*.bottle.*
+*.tar.gz
+*.tgz
+*.zip
+*.sha256
+*.rb~
+/Library/Caches/Homebrew/
+requirements-cli.tar.gz
+
+# ───────────────────────────────────────────────
+# Testes com Bats
+# ───────────────────────────────────────────────
+/test/output/
+/test/*.out
+/test/*.err
+/test/*.result
+*.bats.*
+.bats.*
+
+# ───────────────────────────────────────────────
+# Arquivos .ini
+# ───────────────────────────────────────────────
+*.ini
+!examples/*.ini
+
+# ───────────────────────────────────────────────
+# Outros scripts locais que não vão ao repo
+# ───────────────────────────────────────────────
+local-setup.sh
+debug.log
+*.pkg
