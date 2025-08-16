@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+# File: build-pkg
+# Description: Environment specification utility
+# Copyright 2025, Adrian C Miranda
+# Licensed under the Educational Community License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.osedu.org/licenses/ECL-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -euo pipefail
+
+# Configurações
+MODULE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly MODULE_PATH
+readonly VERSION="0.0.1"
+
+pushd "$MODULE_PATH" >/dev/null
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Criação de pacote .pkg (opcional)
+# ───────────────────────────────────────────────────────────────────────────────
+
+readonly PKG_ROOT="$MODULE_PATH/pkg-root"
+readonly PKG_FILE="$MODULE_PATH/envspec.pkg"
+
+echo "Criando estrutura para pacote .pkg..."
+
+rm -rf "$PKG_ROOT"
+mkdir -p "$PKG_ROOT/opt/envspec"
+mkdir -p "$PKG_ROOT/usr/local/bin"
+
+# Copia arquivos do módulo para /opt/envspec/
+cp -r requirements "$PKG_ROOT/opt/envspec/"
+cp -r examples "$PKG_ROOT/opt/envspec/"
+cp README.md LICENSE "$PKG_ROOT/opt/envspec/"
+
+# Cria wrapper em /usr/local/bin/envspec
+cat >"$PKG_ROOT/usr/local/bin/envspec" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+exec bash /opt/envspec/requirements "$@"
+EOF
+
+chmod +x "$PKG_ROOT/usr/local/bin/envspec"
+
+echo "Gerando pacote envspec.pkg..."
+pkgbuild \
+	--root "$PKG_ROOT" \
+	--identifier com.adriancmiranda.envspec \
+	--version "$VERSION" \
+	--install-location / \
+	"$PKG_FILE"
+
+echo "Pacote .pkg gerado com sucesso: $PKG_FILE"
+
+rm -rf "$PKG_ROOT"
+
+popd >/dev/null

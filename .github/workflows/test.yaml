@@ -1,0 +1,46 @@
+# File: test.yaml
+# Description: Environment specification utility
+# Copyright 2025, Adrian C Miranda
+# Licensed under the Educational Community License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.osedu.org/licenses/ECL-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v5
+
+      - name: Instalar bash@5 e bats
+        run: |
+          brew install bash bats-core
+
+      - name: Detectar caminho do bash@5
+        id: bash
+        run: echo "bash_path=$(brew --prefix)/bin/bash" >> "$GITHUB_OUTPUT"
+
+      - name: Verificar versão do Bash
+        run: ${{ steps.bash.outputs.bash_path }} --version
+
+      - name: Rodar testes com Bats e Bash 5
+        run: |
+          ${{ steps.bash.outputs.bash_path }} -c 'bats ./test/test_requirements.bats'
